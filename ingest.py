@@ -1,6 +1,7 @@
 import logging
 import os
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from typing import List
 
 import click
 import torch
@@ -24,21 +25,20 @@ def file_log(logentry):
    file1.close()
    print(logentry + "\n")
 
-def load_single_document(file_path: str) -> Document:
-    # Loads a single document from a file path
+def load_documents_from_file(file_path: str) -> List[Document]:
+    # Loads documents from a file path.
     try:
        file_extension = os.path.splitext(file_path)[1]
        loader_class = DOCUMENT_MAP.get(file_extension)["loader"]
        if loader_class:
             file_log(file_path + ' loaded.')
-            loader_args = DOCUMENT_MAP.get(file_extension)["args"]
             loader_kwargs = DOCUMENT_MAP.get(file_extension)["kwargs"]
-            loader = loader_class(file_path, *loader_args, **loader_kwargs)
+            loader = loader_class(file_path, **loader_kwargs)
        else:
            file_log(file_path + ' document type is undefined.')
            raise ValueError("Document type is undefined")
        documents = loader.load()
-       return documents[0] # TODO: return a list of documents instead of a single document
+       return documents # TODO: return a list of documents instead of a single document
     except Exception as ex:
        file_log('%s loading error: \n%s' % (file_path, ex))
        return None 
@@ -48,13 +48,15 @@ def load_document_batch(filepaths):
     # create a thread pool
     with ThreadPoolExecutor(len(filepaths)) as exe:
         # load files
-        futures = [exe.submit(load_single_document, name) for name in filepaths]
+        futures = [exe.submit(load_documents_from_file, name) for name in filepaths]
         # collect data
         if futures is None:
            file_log(name + ' failed to submit')
            return None
         else:
            data_list = [future.result() for future in futures]
+           # expand lists of documents into individual documents
+           data_list = [item for sublist in data_list for item in sublist]
            # return data and file paths
            return (data_list, filepaths)
 

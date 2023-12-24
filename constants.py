@@ -11,6 +11,8 @@ from langchain.document_loaders.generic import GenericLoader
 from langchain.document_loaders.parsers import LanguageParser
 from langchain.text_splitter import Language
 
+from dad.loaders.python_file_loader import PythonFileLoader
+
 # load_dotenv()
 ROOT_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
@@ -46,24 +48,22 @@ N_BATCH = 512
 
 # https://python.langchain.com/en/latest/_modules/langchain/document_loaders/excel.html#UnstructuredExcelLoader
 DOCUMENT_MAP:  Dict[str, Dict[str, Any]]= {
-    ".txt": {"loader": TextLoader,  "args": (), "kwargs": {}},
-    ".md": {"loader": UnstructuredMarkdownLoader,  "args": (), "kwargs": {}},
+    ".txt": {"loader": TextLoader, "kwargs": {}},
+    ".md": {"loader": UnstructuredMarkdownLoader, "kwargs": {}},
     ".py": {
-        "loader": GenericLoader.from_filesystem,
-        "args": (),
+        "loader": PythonFileLoader,
         "kwargs": {
-            "glob": "**/*", 
-            "suffixes": ["*.py"],
-            "parser": LanguageParser(language=Language.PYTHON, parser_threshold=0)
-        }
+            "parser_threshold": 20,
+        },
+        "as_dir": True
     },
-    # ".pdf"{"loader":  PDFMinerLoader, "func": PDFMinerLoader.load, "args": (), "kwargs": {}},
-    ".pdf": {"loader": UnstructuredFileLoader,  "args": (), "kwargs": {}},
-    ".csv": {"loader": CSVLoader,  "args": (), "kwargs": {}},
-    ".xls": {"loader": UnstructuredExcelLoader,  "args": (), "kwargs": {}},
-    ".xlsx": {"loader": UnstructuredExcelLoader,  "args": (), "kwargs": {}},
-    ".docx": {"loader": Docx2txtLoader,  "args": (), "kwargs": {}},
-    ".doc": {"loader": Docx2txtLoader,  "args": (), "kwargs": {}},
+    # ".pdf"{"loader":  PDFMinerLoader, "func": PDFMinerLoader.load "kwargs": {}},
+    ".pdf": {"loader": UnstructuredFileLoader, "kwargs": {}},
+    ".csv": {"loader": CSVLoader, "kwargs": {}},
+    ".xls": {"loader": UnstructuredExcelLoader, "kwargs": {}},
+    ".xlsx": {"loader": UnstructuredExcelLoader, "kwargs": {}},
+    ".docx": {"loader": Docx2txtLoader, "kwargs": {}},
+    ".doc": {"loader": Docx2txtLoader, "kwargs": {}},
 }
 
 # Default Instructor Model
