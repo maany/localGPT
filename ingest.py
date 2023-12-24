@@ -28,14 +28,17 @@ def load_single_document(file_path: str) -> Document:
     # Loads a single document from a file path
     try:
        file_extension = os.path.splitext(file_path)[1]
-       loader_class = DOCUMENT_MAP.get(file_extension)
+       loader_class = DOCUMENT_MAP.get(file_extension)["loader"]
        if loader_class:
-           file_log(file_path + ' loaded.')
-           loader = loader_class(file_path)
+            file_log(file_path + ' loaded.')
+            loader_args = DOCUMENT_MAP.get(file_extension)["args"]
+            loader_kwargs = DOCUMENT_MAP.get(file_extension)["kwargs"]
+            loader = loader_class(file_path, *loader_args, **loader_kwargs)
        else:
            file_log(file_path + ' document type is undefined.')
            raise ValueError("Document type is undefined")
-       return loader.load()[0]
+       documents = loader.load()
+       return documents[0] # TODO: return a list of documents instead of a single document
     except Exception as ex:
        file_log('%s loading error: \n%s' % (file_path, ex))
        return None 

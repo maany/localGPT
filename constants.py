@@ -1,4 +1,5 @@
 import os
+from typing import Any, Dict
 
 # from dotenv import load_dotenv
 from chromadb.config import Settings
@@ -6,7 +7,9 @@ from chromadb.config import Settings
 # https://python.langchain.com/en/latest/modules/indexes/document_loaders/examples/excel.html?highlight=xlsx#microsoft-excel
 from langchain.document_loaders import CSVLoader, PDFMinerLoader, TextLoader, UnstructuredExcelLoader, Docx2txtLoader
 from langchain.document_loaders import UnstructuredFileLoader, UnstructuredMarkdownLoader
-
+from langchain.document_loaders.generic import GenericLoader
+from langchain.document_loaders.parsers import LanguageParser
+from langchain.text_splitter import Language
 
 # load_dotenv()
 ROOT_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
@@ -42,17 +45,25 @@ N_BATCH = 512
 
 
 # https://python.langchain.com/en/latest/_modules/langchain/document_loaders/excel.html#UnstructuredExcelLoader
-DOCUMENT_MAP = {
-    ".txt": TextLoader,
-    ".md": UnstructuredMarkdownLoader,
-    ".py": TextLoader,
-    # ".pdf": PDFMinerLoader,
-    ".pdf": UnstructuredFileLoader,
-    ".csv": CSVLoader,
-    ".xls": UnstructuredExcelLoader,
-    ".xlsx": UnstructuredExcelLoader,
-    ".docx": Docx2txtLoader,
-    ".doc": Docx2txtLoader,
+DOCUMENT_MAP:  Dict[str, Dict[str, Any]]= {
+    ".txt": {"loader": TextLoader,  "args": (), "kwargs": {}},
+    ".md": {"loader": UnstructuredMarkdownLoader,  "args": (), "kwargs": {}},
+    ".py": {
+        "loader": GenericLoader.from_filesystem,
+        "args": (),
+        "kwargs": {
+            "glob": "**/*", 
+            "suffixes": ["*.py"],
+            "parser": LanguageParser(language=Language.PYTHON, parser_threshold=0)
+        }
+    },
+    # ".pdf"{"loader":  PDFMinerLoader, "func": PDFMinerLoader.load, "args": (), "kwargs": {}},
+    ".pdf": {"loader": UnstructuredFileLoader,  "args": (), "kwargs": {}},
+    ".csv": {"loader": CSVLoader,  "args": (), "kwargs": {}},
+    ".xls": {"loader": UnstructuredExcelLoader,  "args": (), "kwargs": {}},
+    ".xlsx": {"loader": UnstructuredExcelLoader,  "args": (), "kwargs": {}},
+    ".docx": {"loader": Docx2txtLoader,  "args": (), "kwargs": {}},
+    ".doc": {"loader": Docx2txtLoader,  "args": (), "kwargs": {}},
 }
 
 # Default Instructor Model
