@@ -61,10 +61,15 @@ def load_document_batch(filepaths):
            return (data_list, filepaths)
 
 
-def load_documents(source_dir: str) -> list[Document]:
+def load_documents(source_dir: str, ignored_paths: list[str]) -> list[Document]:
     # Loads all documents from the source documents directory, including nested folders
+    ignored_paths = [os.path.join(source_dir, path) for path in ignored_paths]
     paths = []
     for root, _, files in os.walk(source_dir):
+        # ignore the ignored paths
+        # if root begins with any of the ignored paths, skip it
+        if any(root.startswith(ignored_path) for ignored_path in ignored_paths):
+            continue
         for file_name in files:
             print('Importing: ' + file_name)
             file_extension = os.path.splitext(file_name)[1]
@@ -101,18 +106,19 @@ def load_documents(source_dir: str) -> list[Document]:
                 
     return docs
 
-
-def split_documents(documents: list[Document]) -> tuple[list[Document], list[Document]]:
+def split_documents(documents: list[Document]) -> tuple[list[Document], list[Document], list[Document]]:
     # Splits documents for correct Text Splitter
-    text_docs, python_docs = [], []
+    text_docs, python_docs, javascript_docs = [], [], []
     for doc in documents:
         if doc is not None:
            file_extension = os.path.splitext(doc.metadata["source"])[1]
            if file_extension == ".py":
                python_docs.append(doc)
+           elif file_extension == ".js":
+                javascript_docs.append(doc)
            else:
                text_docs.append(doc)
-    return text_docs, python_docs
+    return text_docs, python_docs, javascript_docs
 
 
 @click.command()
@@ -147,14 +153,18 @@ def split_documents(documents: list[Document]) -> tuple[list[Document], list[Doc
 def main(device_type):
     # Load documents and split in chunks
     logging.info(f"Loading documents from {SOURCE_DIRECTORY}")
-    documents = load_documents(SOURCE_DIRECTORY)
-    text_documents, python_documents = split_documents(documents)
+    documents = load_documents(SOURCE_DIRECTORY, [".git", ".vscode", "node_modules", "docs", "./dist"])
+    text_documents, python_documents, javascript_documents = split_documents(documents)
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=200)
     python_splitter = RecursiveCharacterTextSplitter.from_language(
         language=Language.PYTHON, chunk_size=880, chunk_overlap=200
     )
+    javascript_splitter = RecursiveCharacterTextSplitter.from_language(
+        language=Language.JS, chunk_size=880, chunk_overlap=200
+    )
     texts = text_splitter.split_documents(text_documents)
     texts.extend(python_splitter.split_documents(python_documents))
+    texts.extend(javascript_splitter.split_documents(javascript_documents))
     logging.info(f"Loaded {len(documents)} documents from {SOURCE_DIRECTORY}")
     logging.info(f"Split into {len(texts)} chunks of text")
 

@@ -12,12 +12,13 @@ from langchain.document_loaders.parsers import LanguageParser
 from langchain.text_splitter import Language
 
 from dad.loaders.python_file_loader import PythonFileLoader
+from dad.loaders.javascript_file_loader import JavaScriptFileLoader
 
 # load_dotenv()
 ROOT_DIRECTORY = os.path.dirname(os.path.realpath(__file__))
 
 # Define the folder for storing database
-SOURCE_DIRECTORY = f"{ROOT_DIRECTORY}/SOURCE_DOCUMENTS"
+SOURCE_DIRECTORY = f"{ROOT_DIRECTORY}/SOURCE_DOCUMENTS/ralph-the-moose-ui-kit"
 
 PERSIST_DIRECTORY = f"{ROOT_DIRECTORY}/DB"
 
@@ -56,6 +57,30 @@ DOCUMENT_MAP:  Dict[str, Dict[str, Any]]= {
             "parser_threshold": 20,
         },
         "as_dir": True
+    },
+    ".js": {
+        "loader": JavaScriptFileLoader,
+        "kwargs": {
+            "parser_threshold": 1,
+        },
+    },
+    ".jsx": {
+        "loader": JavaScriptFileLoader,
+        "kwargs": {
+            "parser_threshold": 1,
+        },
+    },
+    ".ts": {
+        "loader": JavaScriptFileLoader,
+        "kwargs": {
+            "parser_threshold": 1,
+        },
+    },
+    ".tsx": {
+        "loader": JavaScriptFileLoader,
+        "kwargs": {
+            "parser_threshold": 1,
+        },
     },
     # ".pdf"{"loader":  PDFMinerLoader, "func": PDFMinerLoader.load "kwargs": {}},
     ".pdf": {"loader": UnstructuredFileLoader, "kwargs": {}},

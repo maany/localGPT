@@ -157,7 +157,7 @@ def prompt_route():
     global QA
     user_prompt = request.form.get("user_prompt")
     if user_prompt:
-        # print(f'User Prompt: {user_prompt}')
+        print(f'User Prompt: {user_prompt}')
         # Get the answer from the chain
         res = QA(user_prompt)
         answer, docs = res["result"], res["source_documents"]
@@ -172,7 +172,7 @@ def prompt_route():
             prompt_response_dict["Sources"].append(
                 (os.path.basename(str(document.metadata["source"])), str(document.page_content))
             )
-
+        print(f'Answer: {answer}')
         return jsonify(prompt_response_dict), 200
     else:
         return "No user prompt received", 400
